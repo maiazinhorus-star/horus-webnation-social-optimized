@@ -49,16 +49,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
     
     channel.onmessage = (event) => {
       const { type, data } = event.data;
+      
       if (type === 'post_added') {
-        setPosts((prev) => [data, ...prev]);
+        setPosts((prev) => {
+          // Prevent duplication if the post already exists
+          if (prev.some(p => p.id === data.id)) return prev;
+          return [data, ...prev];
+        });
       } else if (type === 'post_deleted') {
         setPosts((prev) => prev.filter((p) => p.id !== data));
       } else if (type === 'post_liked') {
         setPosts((prev) => prev.map((p) => p.id === data.postId ? { ...p, likes: data.likes } : p));
       } else if (type === 'comment_added') {
-        setPosts((prev) => prev.map((p) => p.id === data.postId ? { ...p, comments: [...p.comments, data.comment] } : p));
+        setPosts((prev) => prev.map((p) => {
+          if (p.id !== data.postId) return p;
+          // Prevent duplication if the comment already exists
+          if (p.comments.some(c => c.id === data.comment.id)) return p;
+          return { ...p, comments: [...p.comments, data.comment] };
+        }));
       } else if (type === 'chat_message') {
-        setChatMessages((prev) => [...prev, data]);
+        setChatMessages((prev) => {
+          // Prevent duplication if the message already exists
+          if (prev.some(m => m.id === data.id)) return prev;
+          return [...prev, data];
+        });
       }
     };
 
@@ -69,10 +83,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
       if (e.key === 'horus_posts') {
-        setPosts(e.newValue ? JSON.parse(e.newValue) : []);
+        const newPosts = e.newValue ? JSON.parse(e.newValue) : [];
+        setPosts(newPosts);
       }
       if (e.key === 'horus_chat') {
-        setChatMessages(e.newValue ? JSON.parse(e.newValue) : []);
+        const newMessages = e.newValue ? JSON.parse(e.newValue) : [];
+        setChatMessages(newMessages);
       }
     };
     window.addEventListener('storage', handleStorage);
@@ -88,7 +104,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const addPost = (postData: Omit<Post, 'id' | 'createdAt' | 'likes' | 'comments'>) => {
     const newPost: Post = {
       ...postData,
-      id: 'post-' + Date.now(),
+      id: 'post-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
       createdAt: new Date().toISOString(),
       likes: [],
       comments: [],
@@ -124,7 +140,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const addComment = (postId: string, commentData: Omit<Comment, 'id' | 'createdAt'>) => {
     const newComment: Comment = {
       ...commentData,
-      id: 'comment-' + Date.now(),
+      id: 'comment-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
       createdAt: new Date().toISOString(),
     };
     const updated = posts.map((p) => {
@@ -139,7 +155,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const sendChatMessage = (content: string) => {
     if (!user || !content.trim()) return;
     const newMessage: ChatMessage = {
-      id: 'msg-' + Date.now(),
+      id: 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
       userId: user.id,
       userNickname: user.nickname,
       userAvatar: user.avatar,
