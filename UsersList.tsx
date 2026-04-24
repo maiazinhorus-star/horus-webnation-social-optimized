@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { useData } from './DataContext';
 import { Users, Phone, AtSign, MessageCircle, Crown, User } from 'lucide-react';
@@ -5,11 +6,17 @@ import { Users, Phone, AtSign, MessageCircle, Crown, User } from 'lucide-react';
 export default function UsersList() {
   const { allUsers, user: currentUser } = useAuth();
   const { onlineCount } = useData();
+  const [displayUsers, setDisplayUsers] = useState(allUsers);
+
+  // Sincronizar o estado local com o AuthContext
+  useEffect(() => {
+    setDisplayUsers(allUsers);
+  }, [allUsers]);
 
   if (!currentUser) return null;
 
-  const normalUsers = allUsers.filter((u) => !u.isAdmin && u.id !== currentUser.id);
-  const adminUser = allUsers.find((u) => u.isAdmin);
+  const normalUsers = displayUsers.filter((u) => !u.isAdmin && u.id !== currentUser.id);
+  const adminUser = displayUsers.find((u) => u.isAdmin);
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
@@ -22,7 +29,7 @@ export default function UsersList() {
           <div>
             <h2 className="text-lg font-semibold text-white">Usuários do Horus</h2>
             <p className="text-sm text-gray-400">
-              {allUsers.length} cadastrados • {onlineCount} online
+              {displayUsers.length} cadastrados • {onlineCount} online
             </p>
           </div>
         </div>
