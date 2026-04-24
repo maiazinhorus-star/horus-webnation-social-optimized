@@ -43,3 +43,10 @@ export interface ChatMessage {
   content: string;
   createdAt: string;
 }
+
+export interface MuralMessage {
+  id: string;
+  content: string;
+  createdAt: string;
+  title?: string;
+}

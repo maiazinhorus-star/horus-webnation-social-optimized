@@ -11,6 +11,7 @@ const Chat = lazy(() => import('./Chat'));
 const Profile = lazy(() => import('./Profile'));
 const AdminPanel = lazy(() => import('./AdminPanel'));
 const UsersList = lazy(() => import('./UsersList'));
+const Mural = lazy(() => import('./Mural'));
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center min-h-[60vh]">
@@ -41,6 +42,8 @@ function AppContent() {
         return <Feed />;
       case 'chat':
         return <Chat />;
+      case 'mural':
+        return <Mural />;
       case 'profile':
         return <Profile />;
       case 'admin':

@@ -3,7 +3,7 @@ import { useAuth } from './AuthContext';
 import { useData } from './DataContext';
 import {
   Eye, Home, User, MessageCircle, LogOut, Menu, X, Shield, Users,
-  Search, Crown
+  Search, Crown, Megaphone
 } from 'lucide-react';
 
 interface Props {
@@ -21,6 +21,7 @@ export default function Header({ currentPage, onNavigate }: Props) {
 
   const navItems = [
     { id: 'feed', label: 'Feed', icon: Home },
+    { id: 'mural', label: 'Mural', icon: Megaphone },
     { id: 'chat', label: 'Chat', icon: MessageCircle },
     { id: 'users', label: 'Usuários', icon: Users },
     ...(user.isAdmin ? [{ id: 'admin', label: 'Painel Admin', icon: Shield }] : []),

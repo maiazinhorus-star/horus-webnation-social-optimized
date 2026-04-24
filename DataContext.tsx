@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import type { Post, Comment, ChatMessage } from './index';
+import type { Post, Comment, ChatMessage, MuralMessage } from './index';
 import { useAuth } from './AuthContext';
 
 interface DataContextType {
@@ -10,6 +10,9 @@ interface DataContextType {
   addComment: (postId: string, comment: Omit<Comment, 'id' | 'createdAt'>) => void;
   chatMessages: ChatMessage[];
   sendChatMessage: (content: string) => void;
+  muralMessages: MuralMessage[];
+  addMuralMessage: (content: string, title?: string) => void;
+  deleteMuralMessage: (id: string) => void;
   onlineCount: number;
 }
 
@@ -33,10 +36,20 @@ function saveChatMessages(messages: ChatMessage[]) {
   localStorage.setItem('horus_chat', JSON.stringify(messages.slice(-200)));
 }
 
+function getMuralMessages(): MuralMessage[] {
+  const stored = localStorage.getItem('horus_mural');
+  return stored ? JSON.parse(stored) : [];
+}
+
+function saveMuralMessages(messages: MuralMessage[]) {
+  localStorage.setItem('horus_mural', JSON.stringify(messages));
+}
+
 export function DataProvider({ children }: { children: ReactNode }) {
   const { user, allUsers } = useAuth();
   const [posts, setPosts] = useState<Post[]>(getPosts());
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(getChatMessages());
+  const [muralMessages, setMuralMessages] = useState<MuralMessage[]>(getMuralMessages());
   const [onlineCount, setOnlineCount] = useState(0);
 
   useEffect(() => {
@@ -52,7 +65,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
       
       if (type === 'post_added') {
         setPosts((prev) => {
-          // Prevent duplication if the post already exists
           if (prev.some(p => p.id === data.id)) return prev;
           return [data, ...prev];
         });
@@ -63,16 +75,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
       } else if (type === 'comment_added') {
         setPosts((prev) => prev.map((p) => {
           if (p.id !== data.postId) return p;
-          // Prevent duplication if the comment already exists
           if (p.comments.some(c => c.id === data.comment.id)) return p;
           return { ...p, comments: [...p.comments, data.comment] };
         }));
       } else if (type === 'chat_message') {
         setChatMessages((prev) => {
-          // Prevent duplication if the message already exists
           if (prev.some(m => m.id === data.id)) return prev;
           return [...prev, data];
         });
+      } else if (type === 'mural_added') {
+        setMuralMessages((prev) => {
+          if (prev.some(m => m.id === data.id)) return prev;
+          return [data, ...prev];
+        });
+      } else if (type === 'mural_deleted') {
+        setMuralMessages((prev) => prev.filter((m) => m.id !== data));
       }
     };
 
@@ -83,12 +100,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
       if (e.key === 'horus_posts') {
-        const newPosts = e.newValue ? JSON.parse(e.newValue) : [];
-        setPosts(newPosts);
+        setPosts(e.newValue ? JSON.parse(e.newValue) : []);
       }
       if (e.key === 'horus_chat') {
-        const newMessages = e.newValue ? JSON.parse(e.newValue) : [];
-        setChatMessages(newMessages);
+        setChatMessages(e.newValue ? JSON.parse(e.newValue) : []);
+      }
+      if (e.key === 'horus_mural') {
+        setMuralMessages(e.newValue ? JSON.parse(e.newValue) : []);
       }
     };
     window.addEventListener('storage', handleStorage);
@@ -168,10 +186,34 @@ export function DataProvider({ children }: { children: ReactNode }) {
     broadcast('chat_message', newMessage);
   };
 
+  const addMuralMessage = (content: string, title?: string) => {
+    if (!user?.isAdmin) return;
+    const newMessage: MuralMessage = {
+      id: 'mural-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+      content: content.trim(),
+      title: title?.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    const updated = [newMessage, ...muralMessages];
+    setMuralMessages(updated);
+    saveMuralMessages(updated);
+    broadcast('mural_added', newMessage);
+  };
+
+  const deleteMuralMessage = (id: string) => {
+    if (!user?.isAdmin) return;
+    const updated = muralMessages.filter((m) => m.id !== id);
+    setMuralMessages(updated);
+    saveMuralMessages(updated);
+    broadcast('mural_deleted', id);
+  };
+
   return (
     <DataContext.Provider value={{
       posts, addPost, deletePost, likePost, addComment,
-      chatMessages, sendChatMessage, onlineCount,
+      chatMessages, sendChatMessage,
+      muralMessages, addMuralMessage, deleteMuralMessage,
+      onlineCount,
     }}>
       {children}
     </DataContext.Provider>
