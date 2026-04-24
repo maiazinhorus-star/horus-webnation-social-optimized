@@ -1,16 +1,16 @@
 import { useState, lazy, Suspense } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { DataProvider } from './contexts/DataContext';
-import Header from './components/Header';
+import { AuthProvider, useAuth } from './AuthContext';
+import { DataProvider } from './DataContext';
+import Header from './Header';
 
 // Lazy loading components
-const LoginPage = lazy(() => import('./components/LoginPage'));
-const RegisterPage = lazy(() => import('./components/RegisterPage'));
-const Feed = lazy(() => import('./components/Feed'));
-const Chat = lazy(() => import('./components/Chat'));
-const Profile = lazy(() => import('./components/Profile'));
-const AdminPanel = lazy(() => import('./components/AdminPanel'));
-const UsersList = lazy(() => import('./components/UsersList'));
+const LoginPage = lazy(() => import('./LoginPage'));
+const RegisterPage = lazy(() => import('./RegisterPage'));
+const Feed = lazy(() => import('./Feed'));
+const Chat = lazy(() => import('./Chat'));
+const Profile = lazy(() => import('./Profile'));
+const AdminPanel = lazy(() => import('./AdminPanel'));
+const UsersList = lazy(() => import('./UsersList'));
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center min-h-[60vh]">

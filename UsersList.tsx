@@ -1,5 +1,5 @@
-import { useAuth } from '../contexts/AuthContext';
-import { useData } from '../contexts/DataContext';
+import { useAuth } from './AuthContext';
+import { useData } from './DataContext';
 import { Users, Phone, AtSign, MessageCircle, Crown, User } from 'lucide-react';
 
 export default function UsersList() {

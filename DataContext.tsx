@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import type { Post, Comment, ChatMessage } from '../types';
+import type { Post, Comment, ChatMessage } from './index';
 import { useAuth } from './AuthContext';
 
 interface DataContextType {

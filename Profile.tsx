@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useData } from '../contexts/DataContext';
+import { useAuth } from './AuthContext';
+import { useData } from './DataContext';
 import {
   User, Camera, Save, Edit3, Phone, AtSign, MessageCircle,
   Calendar, Mail, Heart, Share2, Send
@@ -213,7 +213,7 @@ export default function Profile() {
                 {user.instagram && (
                   <a href={`https://instagram.com/${user.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-1.5 bg-pink-600/20 text-pink-400 px-3 py-1.5 rounded-full text-xs hover:bg-pink-600/30 transition-all">
-<AtSign className="w-3 h-3" /> Instagram
+                    <AtSign className="w-3 h-3" /> Instagram
                   </a>
                 )}
                 {user.telegram && (
@@ -254,79 +254,12 @@ export default function Profile() {
                 </div>
                 <button onClick={() => deletePost(post.id)} className="text-gray-600 hover:text-red-400 transition-colors">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14"/>
+                    <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6h16zM10 11v6M14 11v6" />
                   </svg>
                 </button>
               </div>
-              {post.content && <div className="px-4 pb-3"><p className="text-gray-200 text-sm">{post.content}</p></div>}
-              {post.image && <div className="px-4 pb-3"><img src={post.image} alt="" className="rounded-xl w-full max-h-80 object-cover" /></div>}
-              <div className="px-4 py-2 border-t border-gold-600/10 flex items-center gap-2">
-                <button onClick={() => likePost(post.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs ${
-                    post.likes.includes(user.id) ? 'text-red-400 bg-red-400/10' : 'text-gray-400 hover:text-red-400'
-                  }`}>
-                  <Heart className={`w-4 h-4 ${post.likes.includes(user.id) ? 'fill-current' : ''}`} />
-                  {post.likes.length > 0 && post.likes.length}
-                </button>
-                <button onClick={() => setShowComments({ ...showComments, [post.id]: !showComments[post.id] })}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-400 hover:text-white">
-                  <MessageCircle className="w-4 h-4" />
-                  {post.comments.length > 0 && post.comments.length}
-                </button>
-                <div className="relative">
-                  <button onClick={() => setShowShareMenu(showShareMenu === post.id ? null : post.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-400 hover:text-gold-400">
-                    <Share2 className="w-4 h-4" /> Compartilhar
-                  </button>
-                  {showShareMenu === post.id && (
-                    <>
-                      <div className="fixed inset-0 z-10" onClick={() => setShowShareMenu(null)} />
-                      <div className="absolute bottom-full left-0 mb-2 bg-dark-800 border border-gold-600/20 rounded-xl p-2 z-20 shadow-xl min-w-[160px]">
-                        <button onClick={() => handleShare(post, 'whatsapp')} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-400 hover:bg-green-400/10 rounded-lg">
-                          WhatsApp
-                        </button>
-                        <button onClick={() => handleShare(post, 'instagram')} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-pink-400 hover:bg-pink-400/10 rounded-lg">
-                          Instagram
-                        </button>
-                        <button onClick={() => handleShare(post, 'telegram')} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-blue-400 hover:bg-blue-400/10 rounded-lg">
-                          Telegram
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-              {/* Comments */}
-              {showComments[post.id] && (
-                <div className="px-4 pb-4 border-t border-gold-600/10">
-                  {post.comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-2 py-2">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-gold-600 to-gold-400 flex items-center justify-center overflow-hidden flex-shrink-0">
-                        {comment.userAvatar ? <img src={comment.userAvatar} alt="" className="w-full h-full object-cover" /> :
-                          <span className="text-black font-bold text-[10px]">{comment.userNickname.charAt(0).toUpperCase()}</span>}
-                      </div>
-                      <div className="bg-dark-800 rounded-xl px-3 py-1.5 flex-1">
-                        <span className="text-gold-400 text-xs font-semibold">{comment.userNickname}</span>
-                        <p className="text-gray-300 text-xs">{comment.content}</p>
-                      </div>
-                    </div>
-                  ))}
-                  <div className="flex gap-2 pt-2">
-                    <input
-                      type="text"
-                      value={commentInputs[post.id] || ''}
-                      onChange={(e) => setCommentInputs({ ...commentInputs, [post.id]: e.target.value })}
-                      placeholder="Comentar..."
-                      className="flex-1 bg-dark-800 border border-gold-600/20 rounded-full px-4 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-gold-500"
-                      onKeyDown={(e) => e.key === 'Enter' && handleComment(post.id)}
-                    />
-                    <button onClick={() => handleComment(post.id)} disabled={!commentInputs[post.id]?.trim()}
-                      className="text-gold-400 hover:text-gold-300 disabled:text-gray-600">
-                      <Send className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
+              {post.content && <div className="px-4 pb-3 text-sm text-gray-200">{post.content}</div>}
+              {post.image && <img src={post.image} alt="" className="w-full max-h-80 object-cover" />}
             </div>
           ))
         )}

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useData } from '../contexts/DataContext';
+import { useAuth } from './AuthContext';
+import { useData } from './DataContext';
 import {
   Shield, Users, UserCheck, Trash2, Send, Image,
   Eye, Crown, Activity, MessageCircle, FileText, BarChart3,
@@ -271,7 +271,7 @@ export default function AdminPanel() {
                 </button>
               </div>
             )}
-            <div className="flex items-center gap-3 mt-4">
+            <div className="flex items-center gap-2 mt-4">
               <input
                 type="file"
                 accept="image/*"
@@ -281,100 +281,59 @@ export default function AdminPanel() {
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2 text-gray-400 hover:text-gold-400 text-sm transition-colors"
+                className="flex items-center gap-2 text-gray-400 hover:text-gold-400 transition-colors"
               >
-                <Image className="w-4 h-4" /> Adicionar Imagem
+                <Image className="w-5 h-5" /> Adicionar Imagem
               </button>
               <button
                 onClick={handleMuralPost}
                 disabled={!muralContent.trim() && !muralImage}
-                className="btn-gold ml-auto px-6 py-2.5 rounded-xl flex items-center gap-2 text-sm disabled:opacity-50"
+                className="btn-gold ml-auto px-6 py-2 rounded-xl flex items-center gap-2 disabled:opacity-50"
               >
                 <Send className="w-4 h-4" /> Publicar no Mural
               </button>
             </div>
           </div>
-
-          {/* Recent Admin Posts */}
-          <div className="card-dark rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Posts do Mural</h3>
-            {posts.filter((p) => p.userId === 'admin-001').length === 0 ? (
-              <p className="text-gray-500 text-center py-4">Nenhum post no mural ainda</p>
-            ) : (
-              <div className="space-y-4">
-                {posts.filter((p) => p.userId === 'admin-001').map((post) => (
-                  <div key={post.id} className="bg-dark-800 rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-gray-500">{formatDate(post.createdAt)}</span>
-                      <button onClick={() => deletePost(post.id)} className="text-red-400 hover:text-red-300">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    {post.content && <p className="text-white text-sm">{post.content}</p>}
-                    {post.image && <img src={post.image} alt="" className="rounded-lg mt-2 max-h-48 object-cover" />}
-                    <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                      <span>{post.likes.length} curtidas</span>
-                      <span>{post.comments.length} comentários</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       )}
 
-      {/* Confirm Delete Modal */}
+      {/* Delete Confirmation Modal */}
       {confirmDelete && (
-        <>
-          <div className="fixed inset-0 bg-black/70 z-50" onClick={() => setConfirmDelete(null)} />
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            <div className="card-dark rounded-2xl p-6 max-w-sm w-full">
-              <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-white text-center mb-2">Confirmar Remoção</h3>
-              <p className="text-gray-400 text-sm text-center mb-6">
-                Tem certeza que deseja remover este usuário? Esta ação não pode ser desfeita.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setConfirmDelete(null)}
-                  className="flex-1 bg-dark-800 text-gray-400 py-2.5 rounded-xl text-sm hover:text-white transition-all"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => handleDeleteUser(confirmDelete)}
-                  className="flex-1 bg-red-600 text-white py-2.5 rounded-xl text-sm hover:bg-red-700 transition-all"
-                >
-                  Remover
-                </button>
-              </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="card-dark w-full max-w-sm p-6 rounded-2xl border border-red-500/30">
+            <h3 className="text-xl font-bold text-white mb-2">Confirmar Exclusão</h3>
+            <p className="text-gray-400 text-sm mb-6">
+              Tem certeza que deseja remover este usuário? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="flex-1 py-2.5 rounded-xl bg-dark-800 text-white hover:bg-dark-700 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleDeleteUser(confirmDelete)}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 text-white hover:bg-red-500 transition-all"
+              >
+                Remover
+              </button>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );
 }
 
-function StatCard({ icon, label, value, color, bg }: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  color: string;
-  bg: string;
-}) {
+function StatCard({ icon, label, value, color, bg }: { icon: React.ReactNode, label: string, value: number, color: string, bg: string }) {
   return (
-    <div className="card-dark rounded-2xl p-5">
-      <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center ${color}`}>
-          {icon}
-        </div>
-        <div>
-          <p className="text-2xl font-bold text-white">{value}</p>
-          <p className="text-xs text-gray-400">{label}</p>
-        </div>
+    <div className="card-dark rounded-2xl p-5 border border-gold-600/5">
+      <div className={`w-10 h-10 rounded-xl ${bg} ${color} flex items-center justify-center mb-3`}>
+        {icon}
       </div>
+      <p className="text-gray-500 text-xs font-medium uppercase tracking-wider">{label}</p>
+      <p className="text-2xl font-bold text-white mt-1">{value}</p>
     </div>
   );
 }

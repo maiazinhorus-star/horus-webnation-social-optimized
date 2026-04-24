@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from './AuthContext';
 import { Eye, User, Lock, UserPlus, LogIn, AlertCircle, Crown } from 'lucide-react';
 
 interface Props {

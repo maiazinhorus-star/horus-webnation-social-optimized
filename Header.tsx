@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useData } from '../contexts/DataContext';
+import { useAuth } from './AuthContext';
+import { useData } from './DataContext';
 import {
   Eye, Home, User, MessageCircle, LogOut, Menu, X, Shield, Users,
   Search, Crown
