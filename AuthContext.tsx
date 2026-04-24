@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { User } from './index';
 
 interface AuthContextType {
@@ -51,6 +51,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [allUsers, setAllUsers] = useState<User[]>(getUsers());
 
+  const broadcast = useCallback((type: string, data: unknown) => {
+    const channel = new BroadcastChannel('horus_auth_channel');
+    channel.postMessage({ type, data });
+    channel.close();
+  }, []);
+
+  useEffect(() => {
+    const channel = new BroadcastChannel('horus_auth_channel');
+    channel.onmessage = (event) => {
+      const { type } = event.data;
+      if (type === 'users_updated') {
+        setAllUsers(getUsers());
+      }
+    };
+    
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'horus_users') {
+        setAllUsers(getUsers());
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      channel.close();
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
+
   useEffect(() => {
     const stored = localStorage.getItem('horus_current_user');
     if (stored) {
@@ -60,20 +88,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (found) {
         found.isOnline = true;
         setUser(found);
-        saveUsers(users.map((u: User) => u.id === found.id ? found : u));
-        setAllUsers(getUsers());
+        const updatedUsers = users.map((u: User) => u.id === found.id ? found : u);
+        saveUsers(updatedUsers);
+        setAllUsers(updatedUsers);
+        broadcast('users_updated', null);
       }
     }
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('horus_current_user', JSON.stringify(user));
-      const users = getUsers();
-      saveUsers(users.map((u: User) => u.id === user.id ? { ...user, isOnline: true } : u));
-      setAllUsers(getUsers());
-    }
-  }, [user]);
+  }, [broadcast]);
 
   const login = (email: string, password: string): boolean => {
     const users = getUsers();
@@ -83,8 +104,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (found) {
       found.isOnline = true;
       setUser(found);
-      saveUsers(users.map((u: User) => u.id === found.id ? found : u));
-      setAllUsers(getUsers());
+      const updatedUsers = users.map((u: User) => u.id === found.id ? found : u);
+      saveUsers(updatedUsers);
+      setAllUsers(updatedUsers);
+      localStorage.setItem('horus_current_user', JSON.stringify(found));
+      broadcast('users_updated', null);
       return true;
     }
     return false;
@@ -107,15 +131,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     users.push(newUser);
     saveUsers(users);
     setUser(newUser);
-    setAllUsers(getUsers());
+    setAllUsers(users);
+    localStorage.setItem('horus_current_user', JSON.stringify(newUser));
+    broadcast('users_updated', null);
     return true;
   };
 
   const logout = () => {
     if (user) {
       const users = getUsers();
-      saveUsers(users.map((u: User) => u.id === user.id ? { ...u, isOnline: false } : u));
-      setAllUsers(getUsers());
+      const updatedUsers = users.map((u: User) => u.id === user.id ? { ...u, isOnline: false } : u);
+      saveUsers(updatedUsers);
+      setAllUsers(updatedUsers);
+      broadcast('users_updated', null);
     }
     localStorage.removeItem('horus_current_user');
     setUser(null);
@@ -125,15 +153,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return;
     const users = getUsers();
     const updated = { ...user, ...userData };
-    saveUsers(users.map((u: User) => u.id === user.id ? updated : u));
+    const updatedUsers = users.map((u: User) => u.id === user.id ? updated : u);
+    saveUsers(updatedUsers);
     setUser(updated);
-    setAllUsers(getUsers());
+    setAllUsers(updatedUsers);
+    localStorage.setItem('horus_current_user', JSON.stringify(updated));
+    broadcast('users_updated', null);
   };
 
   const deleteUser = (userId: string) => {
     const users = getUsers();
-    saveUsers(users.filter((u: User) => u.id !== userId));
-    setAllUsers(getUsers());
+    const updatedUsers = users.filter((u: User) => u.id !== userId);
+    saveUsers(updatedUsers);
+    setAllUsers(updatedUsers);
+    broadcast('users_updated', null);
   };
 
   return (
